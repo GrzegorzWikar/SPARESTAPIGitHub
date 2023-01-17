@@ -1,14 +1,18 @@
 import { IPagination } from "../models";
+import PostPerPage from "./PostPerPage";
 
-const Pagination  = ({postPerPage, totalPosts, paginate} : IPagination) => {
+const Pagination  = ({totalPosts, numberOfPosts, paginate, postPerPage} : IPagination) => {
 
     const pageNumber: number[] = []
-
-    for(let i : number = 1 ; i <= Math.ceil(totalPosts / postPerPage);i++){
+    
+    for(let i : number = 1 ; i <= Math.ceil(totalPosts / numberOfPosts);i++){
         pageNumber.push(i);
 
     }
+
     return (
+        <>
+        <PostPerPage postsNumber={postPerPage}/>
         <nav>
             <ul className="pagination">
                 {pageNumber.map(number => [
@@ -21,6 +25,7 @@ const Pagination  = ({postPerPage, totalPosts, paginate} : IPagination) => {
                 }
             </ul>
         </nav>
+        </>
     )
 }
 

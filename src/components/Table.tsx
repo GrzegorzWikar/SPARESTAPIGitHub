@@ -1,6 +1,6 @@
 import Table from 'react-bootstrap/Table';
 import CentredModal from './CentredModal';
-import { IDataRepo } from '../models';
+import { IDataRepo, IDataRepoLan } from '../models';
 
 function Tabele ({currentPosts}: any) {
 
@@ -15,7 +15,7 @@ function Tabele ({currentPosts}: any) {
         </tr>
       </thead>
       <tbody>
-        {currentPosts?.map((res : IDataRepo) => (
+        {currentPosts?.map((res : IDataRepoLan) => (
           <tr  key={res.id}>
             <td><a href={res.html_url}>{res.name}</a></td>
             <td>{res.description}</td>

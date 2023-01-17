@@ -1,14 +1,7 @@
+import { Dispatch, SetStateAction } from "react";
+
 export interface IDataRepo {
-    id: number;
-    html_url: string;
-    name: string;
-    description: string;
-    languages: string;
-    owner: {
-        id: number;
-        login: string;
-        avatar_url: string;
-    };
+    languages_url: string;
 }
 
 export interface IDataRepoLan{
@@ -16,7 +9,8 @@ export interface IDataRepoLan{
     html_url: string;
     name: string;
     description: string;
-    languages: Promise<string[]>;
+    languages_url: string;
+    languages: string[];
     owner: {
         id: number;
         login: string;
@@ -29,16 +23,20 @@ export interface IModal {
     name: string;
 }
 
+export interface IPostPerPage {
+    postsNumber : Dispatch<SetStateAction<number>>
+}
 
 export interface IPagination{
-    postPerPage: number;
     totalPosts: number;
-    paginate: any
+    numberOfPosts: number
+    paginate: Dispatch<SetStateAction<number>>;
+    postPerPage: Dispatch<SetStateAction<number>>;
 }
 
 export interface IFilter{
-    phrase: any;
-    userName: any;
-    language: any;
-    search: boolean
+    user: Dispatch<SetStateAction<string>>;
+    phrase: Dispatch<SetStateAction<string>>;
+    language: Dispatch<SetStateAction<string>>;
+    submite: React.MouseEventHandler<HTMLButtonElement>
 }

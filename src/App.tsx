@@ -1,124 +1,75 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, SetStateAction, Dispatch } from 'react';
 import './App.css';
 import Pagination from './components/Pagination';
 import Tabele from './components/Table';
 import { IDataRepo, IDataRepoLan } from './models';
+import Filter from './components/Filter';
 
 const App: React.FC = () => {
 
   const [dataRepo, setDataRepo] = useState<IDataRepo[]>([]);
   const [currentPage, setCurentPage] = useState<number>(1);
-  const [postPerPage, setPostPerPage] = useState<number>(10);
-  const [filterLanguage, setFilterLanguage] = useState<string>("");
-  const [filterPhrase, setFilterPhrase] = useState<string>("");
-  const [filterUserName, setFilterUserName] = useState<string>("");
+  const [numberOfPosts, setNumberOfPosts] = useState<number>(10);
   
-  const indexOfLastPost : number = currentPage * postPerPage
-  const indexOfFirstPost : number = indexOfLastPost - postPerPage
-  const currentPosts : any = dataRepo.slice(indexOfFirstPost, indexOfLastPost)
- 
-  const paginate: any = (pageNumber: number) =>  setCurentPage(pageNumber) as void;
+  const [user, setUser] = useState<string>("")
+  const [phrase, setPhrase] = useState<string>("")
+  const [language, setLanguage] = useState<string>("")
+  const [submit, setSubmit] = useState<boolean>(false);
   
-  const handleChange = (event: any) =>{
-    if(event.target.value > 0){
-      setPostPerPage(Number(event.target.value))
-    }
-  }
+  const setFilterUser : Dispatch<SetStateAction<string>> = (user :  SetStateAction<string>) => setUser(user)
+  const setFilterPhrase : Dispatch<SetStateAction<string>> = (phrase: SetStateAction<string>) => setPhrase(phrase)
+  const setFilterLanguage: Dispatch<SetStateAction<string>> = (language: SetStateAction<string>) => setLanguage(language)
+  const setPostPerPage : Dispatch<SetStateAction<number>> = (numberOfPosts : SetStateAction<number>) => setNumberOfPosts(numberOfPosts)
 
-  async function fetchLanguage(url:string) :Promise<string[]>  {
+  const indexOfLastPost : number = currentPage * numberOfPosts
+  const indexOfFirstPost : number = indexOfLastPost - numberOfPosts
+  const currentPosts : IDataRepo[] = dataRepo.slice(indexOfFirstPost, indexOfLastPost)
+ 
+  const paginate: Dispatch<SetStateAction<number>> = (pageNumber: SetStateAction<number>) =>  setCurentPage(pageNumber)
+
+
+  useEffect(() =>{
+    const repos : IDataRepo[] = []
+    async function fetchData(user: string) {
+    const data = await fetch(`https://api.github.com/users/${user}/repos`)
+    const json : IDataRepoLan[] = await data.json()
+    json.forEach((repo : IDataRepoLan) => {
+      fetchLanguage(repo.languages_url)
+      const row : IDataRepoLan = {
+        id: repo.id,
+        html_url: repo.html_url,
+        name: repo.name,
+        description: repo.description,
+        languages_url: repo.languages_url,
+        languages: [],
+        owner: {
+          id: repo.owner.id,
+          login: repo.owner.login,
+          avatar_url: repo.owner.avatar_url
+        },
+      }
+      repos.concat(row)
+    })}
+    if(user !== ""){ 
+    fetchData(user)
+  }
+  },[submit])
+
+  async function fetchLanguage(url:string) : Promise<string[]>  {
     let language: string[] = []
     let data = await fetch(url)
     let json = await data.json()
-    json.array.forEach((row : string) => {
-      language.concat(row)
-    });
+    console.log(json)
     return language
   }
-
-
-
-  useEffect(() => {
-    async function fetchData () {
-      const data = await fetch("https://api.github.com/repositories")
-      const json = await data.json()
-      json.forEach((e : any)  => {
-        let repo: IDataRepo = {
-          id: e.id,
-          html_url: e.html_url,
-          name: e.name,
-          description: e.description,
-          languages: e.languages_url,
-          owner: {
-            id: e.owner.id,
-            login: e.owner.login,
-            avatar_url: e.owner.avatar_url
-          }
-        }
-        setDataRepo(data => data.concat(repo))
-      })
-    }
-    fetchData();
-  }, [])
-
-  function filter () {
-    let timeRepo : IDataRepo[] = dataRepo
-    if(filterUserName !== ""){
-      timeRepo = timeRepo.filter((repo => repo.owner.login === filterUserName ))
-    }
-    if(filterPhrase !== ""){
-      timeRepo = timeRepo.filter((repo) => (repo.description.includes(filterPhrase)))
-    }
-    if(filterLanguage !== ""){
-      let repoTime: IDataRepoLan[] = []
-      timeRepo.forEach(repos => {
-      let language: Promise<string[]> = fetchLanguage(repos.languages)
-      let repo: IDataRepoLan = {
-        id: repos.id,
-        html_url: repos.html_url,
-        name: repos.name,
-        description: repos.description,
-        languages: language,
-        owner: {
-          id: repos.owner.id,
-          login: repos.owner.login,
-          avatar_url: repos.owner.avatar_url
-        }
-      }
-      repoTime.concat(repo)
-      })
-      repoTime = repoTime.filter((repo) => repo.languages.then((lang : string[]) => {lang.forEach((lang) => (!filterLanguage.includes(lang)))}))
-    }
-    setDataRepo(timeRepo)
-  }
+  
 
 return (
-  <div className="App">
-    <form>
-        <label>
-            Phrase:
-            <input type="text" onChange={(event) => setFilterPhrase(event.target.value)} />
-        </label>
-        <label>
-            User:
-            <input type="text" id="user" onChange={event => setFilterUserName(event.target.value)}/>
-        </label>
-        <label>
-            Language:
-            <select id="language"  onChange={event => setFilterLanguage(event.target.value)}>
-                <option>All</option>
-                <option>Go</option>
-                <option>Java</option>
-                <option>JavaScript</option>
-            </select>
-        </label>
-        <button onClick={() => filter()} type="button" className="btn btn-primary" >Submite</button>
-    </form>
-    <input type="text" onChange={handleChange} value={postPerPage}/>
-    <Tabele  currentPosts={currentPosts}/>
-    <Pagination postPerPage={postPerPage} totalPosts={dataRepo.length} paginate={paginate} />
-
-  </div>
-);
-}
+<div className="App">
+  <Filter  user={setFilterUser} phrase={setFilterPhrase} language={setFilterLanguage} submite={() => setSubmit(true)}/>
+  <Tabele  currentPosts={currentPosts}/>
+  <Pagination totalPosts={dataRepo.length} paginate={paginate} postPerPage={setPostPerPage} numberOfPosts={numberOfPosts}/>
+</div>
+);}
 
 export default App;
