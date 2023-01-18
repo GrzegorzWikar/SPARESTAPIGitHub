@@ -1,16 +1,16 @@
 import { Dispatch, SetStateAction } from "react";
 
-export interface IDataRepo {
-    languages_url: string;
-}
-
 export interface IDataRepoLan{
     id: number;
     html_url: string;
     name: string;
     description: string;
     languages_url: string;
-    languages: string[];
+    languages: {
+        GO: boolean;
+        Java: boolean;
+        JavaScript: boolean
+    };
     owner: {
         id: number;
         login: string;

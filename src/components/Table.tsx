@@ -1,6 +1,6 @@
 import Table from 'react-bootstrap/Table';
 import CentredModal from './CentredModal';
-import { IDataRepo, IDataRepoLan } from '../models';
+import { IDataRepoLan } from '../models';
 
 function Tabele ({currentPosts}: any) {
 

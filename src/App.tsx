@@ -2,12 +2,12 @@ import { useState, useEffect, SetStateAction, Dispatch } from 'react';
 import './App.css';
 import Pagination from './components/Pagination';
 import Tabele from './components/Table';
-import { IDataRepo, IDataRepoLan } from './models';
+import { IDataRepoLan } from './models';
 import Filter from './components/Filter';
 
 const App: React.FC = () => {
 
-  const [dataRepo, setDataRepo] = useState<IDataRepo[]>([]);
+  const [dataRepo, setDataRepo] = useState<IDataRepoLan[]>([]);
   const [currentPage, setCurentPage] = useState<number>(1);
   const [numberOfPosts, setNumberOfPosts] = useState<number>(10);
   
@@ -23,44 +23,59 @@ const App: React.FC = () => {
 
   const indexOfLastPost : number = currentPage * numberOfPosts
   const indexOfFirstPost : number = indexOfLastPost - numberOfPosts
-  const currentPosts : IDataRepo[] = dataRepo.slice(indexOfFirstPost, indexOfLastPost)
+  const currentPosts : IDataRepoLan[] = dataRepo.slice(indexOfFirstPost, indexOfLastPost)
  
   const paginate: Dispatch<SetStateAction<number>> = (pageNumber: SetStateAction<number>) =>  setCurentPage(pageNumber)
 
 
   useEffect(() =>{
-    const repos : IDataRepo[] = []
-    async function fetchData(user: string) {
+    if(user !== ""){
+      fetchData(user)
+    }
+
+  },[submit])
+
+  async function fetchData(user: string) {
+    setDataRepo([])
     const data = await fetch(`https://api.github.com/users/${user}/repos`)
     const json : IDataRepoLan[] = await data.json()
-    json.forEach((repo : IDataRepoLan) => {
-      fetchLanguage(repo.languages_url)
-      const row : IDataRepoLan = {
+    json.forEach(async (repo : IDataRepoLan) => {
+      let row : IDataRepoLan = {
         id: repo.id,
         html_url: repo.html_url,
         name: repo.name,
         description: repo.description,
         languages_url: repo.languages_url,
-        languages: [],
+        languages: {
+          GO: false,
+          Java: false,
+          JavaScript: false
+        },
         owner: {
           id: repo.owner.id,
           login: repo.owner.login,
           avatar_url: repo.owner.avatar_url
         },
       }
-      repos.concat(row)
-    })}
-    if(user !== ""){ 
-    fetchData(user)
-  }
-  },[submit])
+      row = await fetchLanguage(row)
+      dataRepo.push(row)
+      console.log(dataRepo)
+  })}
 
-  async function fetchLanguage(url:string) : Promise<string[]>  {
-    let language: string[] = []
-    let data = await fetch(url)
-    let json = await data.json()
-    console.log(json)
-    return language
+
+  async function fetchLanguage(row:  IDataRepoLan)  {
+    let data = await fetch(row.languages_url)
+    let json : Promise<JSON> = await data.json()
+    if(json.hasOwnProperty("Go")){
+      row.languages.GO = true
+    }
+    if(json.hasOwnProperty("Java")){
+      row.languages.Java = true
+    }
+    if(json.hasOwnProperty("JavaScript")){
+      row.languages.JavaScript = true
+    }
+    return  row
   }
   
 
